@@ -16,6 +16,7 @@
  */
 
 import * as dl from 'deeplearn';
+import {train} from 'deeplearn';
 import * as tf from 'tfjs-node';
 
 import {MnistDataset} from './mnist_data';
@@ -53,13 +54,15 @@ const biases3 = dl.zeros([NUM_CLASSES]);
 // Hyperparameters.
 const LEARNING_RATE = .1;
 const BATCH_SIZE = 100;
-const TRAIN_STEPS = 2000;
+const TRAIN_STEPS = 1000;
 
 const optimizer = dl.train.sgd(LEARNING_RATE);
 
 function model(inputImages: dl.Tensor2D): dl.Tensor2D {
-  const hidden1 = dl.matMul(inputImages, weights1).add(biases1).relu() as dl.Tensor2D;
-  const hidden2 = dl.matMul(hidden1, weights2).add(biases2).relu() as dl.Tensor2D;
+  const hidden1 =
+      dl.matMul(inputImages, weights1).add(biases1).relu() as dl.Tensor2D;
+  const hidden2 =
+      dl.matMul(hidden1, weights2).add(biases2).relu() as dl.Tensor2D;
   return dl.matMul(hidden2, weights3).add(biases3) as dl.Tensor2D;
 }
 
@@ -67,22 +70,20 @@ function loss(labels: dl.Tensor2D, ys: dl.Tensor2D): dl.Scalar {
   return dl.losses.softmaxCrossEntropy(labels, ys).mean() as dl.Scalar;
 }
 
-async function runTraining() {
-  const data = new MnistDataset();
+
+function runEval(data: MnistDataset) {
+  //
+  // TODO write me.
+  //
+}
+
+function runTraining(data: MnistDataset, steps: number) {
   const timer = new Timer();
-
-  console.log('  * Loading training data...');
-  timer.start();
-  await data.loadData();
-  timer.end();
-  console.log(
-      `  * Loaded training data in : ${timer.seconds().toFixed(3)} secs`);
-
   let trainSecs = 0;
   console.log('  * Starting Training...');
   const totalTimer = new Timer();
   totalTimer.start();
-  for (let i = 0; i < TRAIN_STEPS; i++) {
+  for (let i = 0; i < steps; i++) {
     const fetchCost = i % 100 === 0;
 
     if (!data.hasMoreData()) {
@@ -100,14 +101,26 @@ async function runTraining() {
     trainSecs += timer.seconds();
 
     if (fetchCost) {
-      console.log(`Step ${i}: loss = ${cost.dataSync()} in ${
-          timer.seconds().toFixed(3)} secs`);
+      console.log(
+          `Step ${i}: loss = ${cost.dataSync()} in ${timer.secondsString()}`);
     }
   }
   totalTimer.end();
-  console.log(`  * Trained in ${totalTimer.seconds().toFixed(3)} secs`);
+  console.log(`  * Trained in ${totalTimer.secondsString()}`);
   console.log(`  * Average train step time: ${
       (trainSecs / TRAIN_STEPS).toFixed(3)} secs`);
 }
 
-runTraining();
+async function run() {
+  const trainData = new MnistDataset();
+  const testData = new MnistDataset();
+  await Promise.all([trainData.loadTrainingData(), testData.loadTestData()]);
+
+  // Run 2 1000 steps, run eval after each.
+  runTraining(trainData, TRAIN_STEPS);
+  runEval(testData);
+  runTraining(trainData, TRAIN_STEPS);
+  runEval(testData);
+}
+
+run();

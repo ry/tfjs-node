@@ -22,10 +22,13 @@ import {sizeFromShape} from 'deeplearn/dist/util';
 import {createWriteStream, existsSync, readFileSync} from 'fs';
 import {get} from 'https';
 import {createGunzip} from 'zlib';
+import {Timer} from './timer';
 
 const BASE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/';
 const TRAIN_IMAGES_FILE = 'train-images-idx3-ubyte';
 const TRAIN_LABELS_FILE = 'train-labels-idx1-ubyte';
+const TEST_IMAGES_FILE = 't10k-images-idx3-ubyte';
+const TEST_LABELS_FILE = 't10k-labels-idx1-ubyte';
 
 const NUM_TRAIN_EXAMPLES = 60000;
 const IMAGE_HEADER_BYTES = 16;
@@ -70,7 +73,7 @@ async function loadImages(filename: string): Promise<TypedArray[]> {
 
   const headerValues = loadHeaderValues(buffer, headerBytes);
   equal(headerValues[0], 2051);  // magic number for images
-  equal(headerValues[1], NUM_TRAIN_EXAMPLES);
+  // equal(headerValues[1], NUM_TRAIN_EXAMPLES);
   equal(headerValues[2], IMAGE_DIMENSION_SIZE);
   equal(headerValues[3], IMAGE_DIMENSION_SIZE);
 
@@ -100,7 +103,7 @@ async function loadLabels(filename: string): Promise<TypedArray[]> {
 
   const headerValues = loadHeaderValues(buffer, headerBytes);
   equal(headerValues[0], 2049);  // magic number for labels
-  equal(headerValues[1], NUM_TRAIN_EXAMPLES);
+  // equal(headerValues[1], NUM_TRAIN_EXAMPLES);
 
   const labels = [];
   let index = headerBytes;
@@ -120,9 +123,23 @@ export class MnistDataset {
   protected dataset: TypedArray[][]|null;
   protected batchIndex = 0;
 
-  async loadData(): Promise<void> {
-    this.dataset = await Promise.all(
-        [loadImages(TRAIN_IMAGES_FILE), loadLabels(TRAIN_LABELS_FILE)]);
+  async loadTrainingData(): Promise<void> {
+    return this.loadData(TRAIN_IMAGES_FILE, TRAIN_LABELS_FILE, 'training');
+  }
+
+  async loadTestData(): Promise<void> {
+    return this.loadData(TEST_IMAGES_FILE, TEST_LABELS_FILE, 'test');
+  }
+
+  private async loadData(
+      imagesFile: string, labelsFile: string, dataName: string): Promise<void> {
+    console.log(`  * Loading ${dataName} data...`);
+    const timer = new Timer();
+    timer.start();
+    this.dataset =
+        await Promise.all([loadImages(imagesFile), loadLabels(labelsFile)]);
+    timer.end();
+    console.log(`  * Loaded ${dataName} data in : ${timer.secondsString()}`);
   }
 
   reset() {
