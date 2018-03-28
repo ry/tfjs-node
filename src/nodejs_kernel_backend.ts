@@ -272,10 +272,23 @@ export class NodeJSKernelBackend implements KernelBackend {
   }
 
   topKValues<T extends Tensor<Rank>>(x: T, k: number): Tensor1D {
-    throw new Error('Method not implemented.');
+    const opAttrs = [this.createTypeOpAttr('T', x.dtype)];
+    const outputValues = new this.binding.TensorHandle();
+    const outputIndices = new this.binding.TensorHandle();
+    this.binding.execute(
+        this.context, name, opAttrs, this.getInputTensors([x]),
+        [outputValues, outputIndices]);
+    return this.createOutputTensor(outputValues) as Tensor1D;
   }
+
   topKIndices(x: Tensor<Rank>, k: number): Tensor1D {
-    throw new Error('Method not implemented.');
+    const opAttrs = [this.createTypeOpAttr('T', x.dtype)];
+    const outputValues = new this.binding.TensorHandle();
+    const outputIndices = new this.binding.TensorHandle();
+    this.binding.execute(
+        this.context, name, opAttrs, this.getInputTensors([x]),
+        [outputValues, outputIndices]);
+    return this.createOutputTensor(outputIndices) as Tensor1D;
   }
 
   min(x: Tensor<Rank>, axes: number[]): Tensor<Rank> {
