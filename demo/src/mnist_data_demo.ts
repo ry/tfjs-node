@@ -43,7 +43,7 @@ function testPrint(image: dl.Tensor, label: dl.Tensor) {
 
 async function loadTest() {
   const dataset = new MnistDataset();
-  await dataset.loadData();
+  await dataset.loadTrainingData();
 
   const testBatch = dataset.nextTrainBatch(3);
   testPrint(testBatch.image, testBatch.label);
