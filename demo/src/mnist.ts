@@ -53,7 +53,7 @@ const biases3 = tf.zeros([NUM_CLASSES]);
 // Hyperparameters.
 const LEARNING_RATE = .1;
 const BATCH_SIZE = 100;
-const TRAIN_STEPS = 2000;
+const TRAIN_STEPS = 50000;
 
 const optimizer = tf.train.sgd(LEARNING_RATE);
 
@@ -72,6 +72,7 @@ function loss(labels: tf.Tensor2D, ys: tf.Tensor2D): tf.Scalar {
 async function runTraining() {
   const data = new MnistDataset();
   const timer = new Timer();
+  const batchTimer = new Timer();
 
   console.log('  * Loading training data...');
   timer.start();
@@ -102,8 +103,11 @@ async function runTraining() {
     trainSecs += timer.seconds();
 
     if (fetchCost) {
+      batchTimer.end();
       console.log(`Step ${i}: loss = ${cost.dataSync()} in ${
-          timer.seconds().toFixed(3)} secs`);
+          timer.seconds().toFixed(
+              3)} secs (${100 / batchTimer.seconds()} steps/sec)`);
+      batchTimer.start();
     }
   }
   totalTimer.end();
