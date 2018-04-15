@@ -256,7 +256,13 @@ export class NodeJSKernelBackend implements KernelBackend {
     throw new Error('Method not implemented.');
   }
   argMax(x: Tensor<Rank>, axes: number[]): Tensor<Rank> {
-    throw new Error('Method not implemented.');
+    const axisScalar = scalar(axes[0], 'int32');
+    const opAttrs = [
+      this.createTypeOpAttr('T', x.dtype),
+      this.createTypeOpAttr('Tidx', 'int32'),
+      this.createTypeOpAttr('output_type', 'int32')
+    ];
+    return this.executeSingleOutput('ArgMin', opAttrs, [x, axisScalar]);
   }
 
   equal(a: Tensor<Rank>, b: Tensor<Rank>): Tensor<Rank> {
@@ -408,7 +414,8 @@ export class NodeJSKernelBackend implements KernelBackend {
   }
 
   clip<T extends Tensor<Rank>>(x: T, min: number, max: number): T {
-    throw new Error('Method not implemented.');
+    const xMin = this.minimum(x, scalar(max));
+    return this.maximum(xMin, scalar(min)) as T;
   }
 
   abs<T extends Tensor<Rank>>(x: T): T {
