@@ -33,6 +33,9 @@ type TensorInfo = {
 };
 
 export class NodeJSKernelBackend implements KernelBackend {
+  softplus<T extends Tensor<Rank>>(x: T): T {
+    throw new Error('Method not implemented.');
+  }
   private binding: TFJSBinding;
   private tensorMap = new WeakMap<DataId, TensorInfo>();
 
