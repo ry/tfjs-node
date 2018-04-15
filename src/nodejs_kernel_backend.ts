@@ -259,7 +259,7 @@ export class NodeJSKernelBackend implements KernelBackend {
     throw new Error('Method not implemented.');
   }
   argMax(x: Tensor<Rank>, axes: number[]): Tensor<Rank> {
-    const axisScalar = scalar(axes[0], 'int32');
+    const axisScalar = scalar(0, 'int32');
     const opAttrs = [
       this.createTypeOpAttr('T', x.dtype),
       this.createTypeOpAttr('Tidx', 'int32'),
